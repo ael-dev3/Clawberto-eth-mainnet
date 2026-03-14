@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
-import { formatEther, formatGwei } from 'viem';
 import { buildApprovePlan, controlSummary, createEthClient, DEFAULT_SIGNER_ENV, MAINNET_ALIASES, networkSummary, readAllowance, readBalance, readSigner, readTokenMeta, resolveAliasOrAddress } from '../../../src/core/eth.js';
 import { createEthMainnetLogger } from '../../../src/logging/logger.js';
+import { presentPreflight, presentSummary } from '../../../src/logging/presentation.js';
 import { capturePreflight } from '../../../src/logging/txTracker.js';
-import type { LogSummary, TxPlanLike } from '../../../src/logging/types.js';
+import type { TxPlanLike } from '../../../src/logging/types.js';
 
 type ParsedArgs = { positionals: string[]; flags: Map<string, string | true> };
 
@@ -62,25 +62,6 @@ function readPrompt(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf8') : null;
 }
 
-function formatDecimal(value: number | null, decimals: number) {
-  if (value === null || !Number.isFinite(value)) return null;
-  const fixed = value.toFixed(decimals);
-  return fixed.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
-}
-
-function presentSummary(summary: LogSummary) {
-  return {
-    ...summary,
-    avgEstimatedMaxFeePerGasGwei: formatDecimal(summary.avgEstimatedMaxFeePerGasGwei, 9),
-    avgEstimatedPriorityFeeGwei: formatDecimal(summary.avgEstimatedPriorityFeeGwei, 9),
-    avgEffectiveGasPriceGwei: formatDecimal(summary.avgEffectiveGasPriceGwei, 9),
-    avgEstimatedTotalFeeEth: formatDecimal(summary.avgEstimatedTotalFeeEth, 18),
-    avgEstimatedTotalFeeUsd: formatDecimal(summary.avgEstimatedTotalFeeUsd, 6),
-    avgActualFeeEth: formatDecimal(summary.avgActualFeeEth, 18),
-    avgActualFeeUsd: formatDecimal(summary.avgActualFeeUsd, 6),
-  };
-}
-
 async function maybeAttachPreflight(client: ReturnType<typeof createEthClient>, logger: ReturnType<typeof createEthMainnetLogger>, payload: unknown, pkEnv: string) {
   if (!isTxPlanLike(payload)) return payload;
   const signer = await readSigner(client, pkEnv);
@@ -103,27 +84,7 @@ async function maybeAttachPreflight(client: ReturnType<typeof createEthClient>, 
   });
   return {
     ...payload,
-    preflight: {
-      available: true,
-      txKey: preflight.txKey,
-      gasEstimate: preflight.gasEstimate?.toString() ?? null,
-      gasEstimateError: preflight.gasEstimateError,
-      feeEstimateError: preflight.feeEstimateError,
-      baseFeeError: preflight.baseFeeError,
-      feeHistoryError: preflight.feeHistoryError,
-      baseFeePerGasGwei: preflight.baseFeePerGas ? formatGwei(preflight.baseFeePerGas) : null,
-      maxFeePerGasGwei: preflight.maxFeePerGas ? formatGwei(preflight.maxFeePerGas) : null,
-      maxPriorityFeePerGasGwei: preflight.maxPriorityFeePerGas ? formatGwei(preflight.maxPriorityFeePerGas) : null,
-      estimatedTotalFeeWei: preflight.estimatedTotalFeeWei?.toString() ?? null,
-      estimatedTotalFeeEth: preflight.estimatedTotalFeeWei ? formatEther(preflight.estimatedTotalFeeWei) : null,
-      estimatedTotalFeeUsd: preflight.estimatedTotalFeeUsd ?? null,
-      ethPriceUsd: preflight.ethUsdQuote.priceUsd,
-      ethPriceSource: preflight.ethUsdQuote.source,
-      ethPriceFetchedAt: preflight.ethUsdQuote.fetchedAt,
-      ethPriceStale: preflight.ethUsdQuote.stale,
-      ethPriceCacheAgeMs: preflight.ethUsdQuote.cacheAgeMs,
-      ethPriceError: preflight.ethUsdQuote.error,
-    },
+    preflight: presentPreflight(preflight),
   };
 }
 

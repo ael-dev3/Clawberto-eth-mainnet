@@ -2,6 +2,8 @@
 
 TypeScript-first Ethereum mainnet control surface plus protocol adapters, built on `viem`.
 
+Tracked source is all TypeScript. The `.js` import suffixes you see inside `.ts` files are intentional `NodeNext`/ESM output specifiers, not leftover JavaScript source.
+
 This repo is the reusable mainnet layer:
 - `src/core` = generic ETH mainnet control/read/planning
 - `src/supernova` = Supernova-specific adapter on top of that core
@@ -28,6 +30,8 @@ src/
     types.ts                # shared telemetry event types
     logger.ts               # append-only logger + cloud artifact writer
     metrics.ts              # daily summaries + markdown rendering
+    presentation.ts         # clean JSON-facing formatting helpers for summaries/preflights
+    priceFeed.ts            # cached ETH/USD quote helper for fee telemetry
     githubSync.ts           # opt-in debounced git/cloud sync helper
     txTracker.ts            # preflight / broadcast / receipt / error tracking helpers
   supernova/

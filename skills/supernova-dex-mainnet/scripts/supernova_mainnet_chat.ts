@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { controlSummary, createEthClient, DEFAULT_SIGNER_ENV, readSigner } from '../../../src/core/eth.js';
 import { createEthMainnetLogger } from '../../../src/logging/logger.js';
+import { presentPreflight, presentSummary } from '../../../src/logging/presentation.js';
 import { capturePreflight } from '../../../src/logging/txTracker.js';
 import type { TxPlanLike } from '../../../src/logging/types.js';
 import { SUPERNOVA_CONTRACTS } from '../../../src/generated/contracts.js';
@@ -95,20 +96,7 @@ async function maybeAttachPreflight(client: ReturnType<typeof createEthClient>, 
   });
   return {
     ...payload,
-    preflight: {
-      available: true,
-      txKey: preflight.txKey,
-      gasEstimate: preflight.gasEstimate?.toString() ?? null,
-      gasEstimateError: preflight.gasEstimateError,
-      feeEstimateError: preflight.feeEstimateError,
-      baseFeeError: preflight.baseFeeError,
-      feeHistoryError: preflight.feeHistoryError,
-      baseFeePerGasGwei: preflight.baseFeePerGas ? (Number(preflight.baseFeePerGas) / 1e9).toString() : null,
-      maxFeePerGasGwei: preflight.maxFeePerGas ? (Number(preflight.maxFeePerGas) / 1e9).toString() : null,
-      maxPriorityFeePerGasGwei: preflight.maxPriorityFeePerGas ? (Number(preflight.maxPriorityFeePerGas) / 1e9).toString() : null,
-      estimatedTotalFeeWei: preflight.estimatedTotalFeeWei?.toString() ?? null,
-      estimatedTotalFeeEth: preflight.estimatedTotalFeeWei ? (Number(preflight.estimatedTotalFeeWei) / 1e18).toString() : null,
-    },
+    preflight: presentPreflight(preflight),
   };
 }
 
@@ -184,11 +172,11 @@ async function runCommand(parsed: ParsedArgs, logger: ReturnType<typeof createEt
         latestCloudSummaryJson: logger.paths.cloud.latestSummaryJsonPath,
         skillUpdatePromptPath: logger.paths.cloud.skillUpdatePromptPath,
         pendingSkillUpdate: existsSync(logger.paths.cloud.pendingSkillUpdatePath) ? JSON.parse(readFileSync(logger.paths.cloud.pendingSkillUpdatePath, 'utf8')) : null,
-        summary,
+        summary: presentSummary(summary),
       };
     }
     case 'log-summary':
-      return logger.summarizeToday();
+      return presentSummary(logger.summarizeToday());
     case 'log-prompt':
       return {
         path: logger.paths.cloud.skillUpdatePromptPath,

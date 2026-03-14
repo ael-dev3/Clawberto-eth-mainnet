@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createEthClient, DEFAULT_RPC_URL } from '../../../src/core/eth.js';
 import { createEthMainnetLogger } from '../../../src/logging/logger.js';
+import { presentSummary } from '../../../src/logging/presentation.js';
 import { capturePreflight } from '../../../src/logging/txTracker.js';
 
 async function main() {
@@ -28,6 +29,7 @@ async function main() {
     tags: ['smoke'],
   });
   const summary = logger.summarizeToday();
+  const presentedSummary = presentSummary(summary);
   const prompt = readFileSync(logger.paths.cloud.skillUpdatePromptPath, 'utf8');
   const eventLog = readFileSync(logger.paths.eventFile, 'utf8');
   if (summary.avgEstimatedTotalFeeUsd === null) throw new Error('logging smoke expected avgEstimatedTotalFeeUsd');
@@ -38,7 +40,7 @@ async function main() {
     repoRoot,
     eventFile: logger.paths.eventFile,
     cloudPromptPath: logger.paths.cloud.skillUpdatePromptPath,
-    summary,
+    summary: presentedSummary,
     promptPreview: prompt.slice(0, 160),
   }, null, 2));
 }
