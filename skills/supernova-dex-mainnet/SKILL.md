@@ -39,8 +39,16 @@ Supported commands:
 - `snova swap-plan-v2 <tokenIn> <tokenOut> --amount-in <decimal> --recipient <address> [--stable] [--slippage-bps 50] [--deadline-sec 1200] [--amount-out-min <decimal>]`
 - `snova swap-plan-eth-in-v2 <tokenOut> --amount-in-eth <decimal> --recipient <address> [--stable] [--slippage-bps 50] [--deadline-sec 1200] [--amount-out-min <decimal>]`
 - `snova swap-plan-eth-out-v2 <tokenIn> --amount-in <decimal> --recipient <address> [--stable] [--slippage-bps 50] [--deadline-sec 1200] [--amount-out-min <decimal>]`
+- `snova log-status`
+- `snova log-summary`
+- `snova log-prompt`
+
+## Logging
+
+This adapter now logs command lifecycle and captures preflight gas snapshots automatically for tx-plan outputs when signer env is ready.
 
 ## References
 
 - `references/contracts.md`
 - `references/interaction-playbook.md`
+- `../eth-mainnet-control/references/logging-playbook.md`

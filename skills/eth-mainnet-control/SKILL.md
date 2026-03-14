@@ -33,6 +33,9 @@ Supported commands:
 - `eth allowance <token> <owner> <spender|alias>`
 - `eth approve-plan <token> <spender|alias> --amount <decimal>`
 - `eth alias <alias|address>`
+- `eth log-status`
+- `eth log-summary`
+- `eth log-prompt`
 
 ## Aliases
 
@@ -40,6 +43,18 @@ Supported commands:
 - `usdc`
 - `eth` for native-balance reads
 
+## Logging
+
+This skill now writes quiet telemetry during command usage and tx-plan preflights.
+
+Use:
+```bash
+npm run eth -- "eth log-status"
+npm run eth -- "eth log-summary"
+npm run eth -- "eth log-prompt"
+```
+
 ## References
 
 - `references/control-playbook.md`
+- `references/logging-playbook.md`
