@@ -146,6 +146,8 @@ Paths:
 - local raw logs: `runtime/eth-mainnet/devices/<deviceId>/...`
 - cloud-visible summaries/prompts: `cloud/eth-mainnet/...`
 
+Generated `cloud/eth-mainnet` artifacts are gitignored by default so normal command usage does not dirty the repo. If you enable `ETH_MAINNET_AUTO_GIT_SYNC=1`, the sync helper force-adds those generated files and pushes them intentionally.
+
 Inspection commands:
 ```bash
 npm run eth -- "eth log-status"

@@ -7,11 +7,11 @@
     "node": ">=18"
   },
   "scripts": {
-    "eth": "tsx skills/eth-mainnet-control/scripts/eth_mainnet_chat.ts",
-    "snova": "tsx skills/supernova-dex-mainnet/scripts/supernova_mainnet_chat.ts",
-    "smoke:eth": "tsx skills/eth-mainnet-control/scripts/eth_mainnet_smoke.ts",
-    "smoke:snova": "tsx skills/supernova-dex-mainnet/scripts/supernova_mainnet_smoke.ts",
-    "smoke:logging": "tsx skills/eth-mainnet-control/scripts/eth_mainnet_logging_smoke.ts",
+    "eth": "node --import tsx skills/eth-mainnet-control/scripts/eth_mainnet_chat.ts",
+    "snova": "node --import tsx skills/supernova-dex-mainnet/scripts/supernova_mainnet_chat.ts",
+    "smoke:eth": "node --import tsx skills/eth-mainnet-control/scripts/eth_mainnet_smoke.ts",
+    "smoke:snova": "node --import tsx skills/supernova-dex-mainnet/scripts/supernova_mainnet_smoke.ts",
+    "smoke:logging": "node --import tsx skills/eth-mainnet-control/scripts/eth_mainnet_logging_smoke.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run smoke:eth && npm run smoke:snova && npm run smoke:logging"
   },

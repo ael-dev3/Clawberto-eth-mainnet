@@ -26,6 +26,8 @@ Track ETH mainnet agent usage quietly and deterministically:
 - `cloud/eth-mainnet/skill-update-prompt.md`
 - `cloud/eth-mainnet/pending-skill-update.json`
 
+These generated cloud artifacts are gitignored by default so local command usage does not leave the repo dirty. If `ETH_MAINNET_AUTO_GIT_SYNC=1` is set, the sync helper force-adds them for the opt-in commit/push flow.
+
 ## Environment
 
 - `ETH_MAINNET_DEVICE_ID` — override device id (default: sanitized hostname)

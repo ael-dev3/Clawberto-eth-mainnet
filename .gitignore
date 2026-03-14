@@ -1,4 +1,8 @@
 node_modules/
 dist/
 runtime/
+cloud/eth-mainnet/devices/
+cloud/eth-mainnet/pending-skill-update.json
+cloud/eth-mainnet/skill-update-prompt.md
+cloud/eth-mainnet/git-sync-state.json
 .DS_Store

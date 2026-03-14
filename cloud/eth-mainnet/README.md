@@ -10,4 +10,4 @@ Expected generated files:
 - `pending-skill-update.json`
 
 Raw high-volume event logs stay local under `runtime/eth-mainnet/`.
-Only rolled-up summaries and update prompts belong here.
+These generated files are gitignored by default so routine local usage stays clean. When `ETH_MAINNET_AUTO_GIT_SYNC=1` is enabled, the sync helper force-adds and pushes them intentionally.

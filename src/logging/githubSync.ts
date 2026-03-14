@@ -106,9 +106,9 @@ export function maybeAutoGitSync(paths: CloudSyncPaths, ts: string) {
     return { synced: false, reason: 'debounced' };
   }
   try {
-    const status = execFileSync('git', ['-C', paths.repoRoot, 'status', '--porcelain', '--', paths.cloudRoot], { encoding: 'utf8' }).trim();
-    if (!status) return { synced: false, reason: 'no-changes' };
-    execFileSync('git', ['-C', paths.repoRoot, 'add', paths.cloudRoot], { stdio: 'ignore' });
+    execFileSync('git', ['-C', paths.repoRoot, 'add', '-f', paths.cloudRoot], { stdio: 'ignore' });
+    const staged = execFileSync('git', ['-C', paths.repoRoot, 'diff', '--cached', '--name-only', '--', paths.cloudRoot], { encoding: 'utf8' }).trim();
+    if (!staged) return { synced: false, reason: 'no-changes' };
     execFileSync('git', ['-C', paths.repoRoot, 'commit', '-m', `chore(telemetry): sync eth-mainnet ${paths.deviceId} ${ts}`], { stdio: 'ignore' });
     execFileSync('git', ['-C', paths.repoRoot, 'push', 'origin', 'main'], { stdio: 'ignore' });
     writeJson(statePath, { lastSyncUnixMs: nowMs, lastSyncAt: ts });
