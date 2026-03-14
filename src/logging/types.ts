@@ -47,7 +47,9 @@ export type LogSummary = {
   avgEstimatedPriorityFeeGwei: number | null;
   avgEffectiveGasPriceGwei: number | null;
   avgEstimatedTotalFeeEth: number | null;
+  avgEstimatedTotalFeeUsd: number | null;
   avgActualFeeEth: number | null;
+  avgActualFeeUsd: number | null;
   lastError: string | null;
   lastUpdatedAt: string | null;
 };

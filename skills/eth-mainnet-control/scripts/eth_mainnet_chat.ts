@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
+import { formatEther, formatGwei } from 'viem';
 import { buildApprovePlan, controlSummary, createEthClient, DEFAULT_SIGNER_ENV, MAINNET_ALIASES, networkSummary, readAllowance, readBalance, readSigner, readTokenMeta, resolveAliasOrAddress } from '../../../src/core/eth.js';
 import { createEthMainnetLogger } from '../../../src/logging/logger.js';
 import { capturePreflight } from '../../../src/logging/txTracker.js';
@@ -91,11 +92,18 @@ async function maybeAttachPreflight(client: ReturnType<typeof createEthClient>, 
       feeEstimateError: preflight.feeEstimateError,
       baseFeeError: preflight.baseFeeError,
       feeHistoryError: preflight.feeHistoryError,
-      baseFeePerGasGwei: preflight.baseFeePerGas ? (Number(preflight.baseFeePerGas) / 1e9).toString() : null,
-      maxFeePerGasGwei: preflight.maxFeePerGas ? (Number(preflight.maxFeePerGas) / 1e9).toString() : null,
-      maxPriorityFeePerGasGwei: preflight.maxPriorityFeePerGas ? (Number(preflight.maxPriorityFeePerGas) / 1e9).toString() : null,
+      baseFeePerGasGwei: preflight.baseFeePerGas ? formatGwei(preflight.baseFeePerGas) : null,
+      maxFeePerGasGwei: preflight.maxFeePerGas ? formatGwei(preflight.maxFeePerGas) : null,
+      maxPriorityFeePerGasGwei: preflight.maxPriorityFeePerGas ? formatGwei(preflight.maxPriorityFeePerGas) : null,
       estimatedTotalFeeWei: preflight.estimatedTotalFeeWei?.toString() ?? null,
-      estimatedTotalFeeEth: preflight.estimatedTotalFeeWei ? (Number(preflight.estimatedTotalFeeWei) / 1e18).toString() : null,
+      estimatedTotalFeeEth: preflight.estimatedTotalFeeWei ? formatEther(preflight.estimatedTotalFeeWei) : null,
+      estimatedTotalFeeUsd: preflight.estimatedTotalFeeUsd ?? null,
+      ethPriceUsd: preflight.ethUsdQuote.priceUsd,
+      ethPriceSource: preflight.ethUsdQuote.source,
+      ethPriceFetchedAt: preflight.ethUsdQuote.fetchedAt,
+      ethPriceStale: preflight.ethUsdQuote.stale,
+      ethPriceCacheAgeMs: preflight.ethUsdQuote.cacheAgeMs,
+      ethPriceError: preflight.ethUsdQuote.error,
     },
   };
 }

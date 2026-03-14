@@ -1,5 +1,6 @@
 import { formatEther, formatGwei, type Address, type Hex, type PublicClient } from 'viem';
 import type { EthMainnetLogger } from './logger.js';
+import { getEthUsdQuote } from './priceFeed.js';
 
 export type TrackRequest = {
   account?: Address;
@@ -17,6 +18,12 @@ function txKey() {
 
 function maybe<T>(value: T | null | undefined, map: (value: T) => unknown) {
   return value === null || value === undefined ? null : map(value);
+}
+
+function feeUsdFromWei(valueWei: bigint | null, priceUsd: number | null) {
+  if (valueWei === null || priceUsd === null) return null;
+  const eth = Number(formatEther(valueWei));
+  return Number.isFinite(eth) ? eth * priceUsd : null;
 }
 
 export async function capturePreflight(logger: EthMainnetLogger, client: PublicClient, request: TrackRequest) {
@@ -66,6 +73,8 @@ export async function capturePreflight(logger: EthMainnetLogger, client: PublicC
     logger.loggerError(error, 'estimateGas');
   }
   const estimatedTotalFeeWei = gasEstimate !== null && maxFeePerGas !== null ? gasEstimate * maxFeePerGas : null;
+  const ethUsdQuote = await getEthUsdQuote(logger);
+  const estimatedTotalFeeUsd = feeUsdFromWei(estimatedTotalFeeWei, ethUsdQuote.priceUsd);
   const event = logger.appendEvent({
     kind: 'tx-preflight',
     status: 'ok',
@@ -86,6 +95,13 @@ export async function capturePreflight(logger: EthMainnetLogger, client: PublicC
       gasEstimateError,
       estimatedTotalFeeWei: estimatedTotalFeeWei?.toString() ?? null,
       estimatedTotalFeeEth: maybe(estimatedTotalFeeWei, (v) => formatEther(v)),
+      estimatedTotalFeeUsd,
+      ethPriceUsd: ethUsdQuote.priceUsd,
+      ethPriceSource: ethUsdQuote.source,
+      ethPriceFetchedAt: ethUsdQuote.fetchedAt,
+      ethPriceStale: ethUsdQuote.stale,
+      ethPriceCacheAgeMs: ethUsdQuote.cacheAgeMs,
+      ethPriceError: ethUsdQuote.error,
       feeHistoryBaseFees,
       feeEstimateError,
       baseFeeError,
@@ -106,6 +122,8 @@ export async function capturePreflight(logger: EthMainnetLogger, client: PublicC
     maxFeePerGas,
     maxPriorityFeePerGas,
     estimatedTotalFeeWei,
+    estimatedTotalFeeUsd,
+    ethUsdQuote,
   };
 }
 
@@ -144,6 +162,8 @@ export async function waitForTrackedReceipt(logger: EthMainnetLogger, client: Pu
     });
     const latencyMs = Date.now() - preflight.startedAtMs;
     const actualFeeWei = receipt.gasUsed * receipt.effectiveGasPrice;
+    const ethUsdQuote = await getEthUsdQuote(logger);
+    const actualFeeUsd = feeUsdFromWei(actualFeeWei, ethUsdQuote.priceUsd);
     logger.appendEvent({
       kind: 'tx-receipt',
       status: receipt.status === 'success' ? 'success' : 'error',
@@ -158,6 +178,13 @@ export async function waitForTrackedReceipt(logger: EthMainnetLogger, client: Pu
         effectiveGasPriceGwei: formatGwei(receipt.effectiveGasPrice),
         actualFeeWei: actualFeeWei.toString(),
         actualFeeEth: formatEther(actualFeeWei),
+        actualFeeUsd,
+        ethPriceUsd: ethUsdQuote.priceUsd,
+        ethPriceSource: ethUsdQuote.source,
+        ethPriceFetchedAt: ethUsdQuote.fetchedAt,
+        ethPriceStale: ethUsdQuote.stale,
+        ethPriceCacheAgeMs: ethUsdQuote.cacheAgeMs,
+        ethPriceError: ethUsdQuote.error,
         latencyMs,
         ...extra,
       },

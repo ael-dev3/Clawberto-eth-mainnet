@@ -65,6 +65,7 @@ function buildPaths(repoRoot: string, deviceId: string) {
     eventFile: resolve(runtimeRoot, 'events', `${date}.jsonl`),
     loggerErrorFile: resolve(runtimeRoot, 'logger-errors.jsonl'),
     stateFile: resolve(runtimeRoot, 'state.json'),
+    priceCacheFile: resolve(runtimeRoot, 'eth-usd-cache.json'),
     latestRuntimeSummaryMd: resolve(runtimeRoot, 'latest-summary.md'),
     latestRuntimeSummaryJson: resolve(runtimeRoot, 'latest-summary.json'),
     cloud: {

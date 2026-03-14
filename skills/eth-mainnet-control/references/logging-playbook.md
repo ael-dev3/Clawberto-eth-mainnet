@@ -6,6 +6,7 @@ Track ETH mainnet agent usage quietly and deterministically:
 - append-only local event journal
 - command success/error timings
 - gas snapshots before execution/planning
+- fee telemetry in ETH plus best-effort USD using a cached ETH/USD quote
 - broadcast / receipt / replacement / error telemetry for future execution surfaces
 - daily summaries and skill-update prompts
 - optional cloud sync via repo-tracked artifacts and opt-in git push
@@ -34,6 +35,9 @@ These generated cloud artifacts are gitignored by default so local command usage
 - `OPENCLAW_SESSION_KEY` / `SESSION_KEY` — optional session correlation
 - `ETH_MAINNET_AUTO_GIT_SYNC=1` — opt-in auto commit/push of `cloud/eth-mainnet`
 - `ETH_MAINNET_GIT_SYNC_INTERVAL_SEC` — debounce auto sync (default `300`)
+- `ETH_MAINNET_USD_QUOTE_TTL_MS` — ETH/USD quote cache TTL (default `300000`)
+- `ETH_MAINNET_USD_QUOTE_TIMEOUT_MS` — ETH/USD quote fetch timeout (default `4000`)
+- `ETH_MAINNET_USD_PRICE_OVERRIDE` — test/sim override for deterministic USD fee logging
 
 ## What is logged now
 
@@ -54,6 +58,8 @@ When a plan command returns `{ to, value, data }` and signer env is ready:
   - max priority fee gwei
   - gas estimate
   - estimated total fee ETH
+  - estimated total fee USD
+  - ETH/USD quote metadata (`ethPriceUsd`, source, fetchedAt, stale/error state)
 
 ### Available for future execution surfaces
 `src/logging/txTracker.ts` provides:
@@ -68,16 +74,16 @@ Those are the intended hooks for any future executor skill.
 
 Generic repo logging inspection:
 ```bash
-npm run eth -- "eth log-status"
-npm run eth -- "eth log-summary"
-npm run eth -- "eth log-prompt"
+npm run --silent eth -- "eth log-status"
+npm run --silent eth -- "eth log-summary"
+npm run --silent eth -- "eth log-prompt"
 ```
 
 Supernova logging inspection:
 ```bash
-npm run snova -- "snova log-status"
-npm run snova -- "snova log-summary"
-npm run snova -- "snova log-prompt"
+npm run --silent snova -- "snova log-status"
+npm run --silent snova -- "snova log-summary"
+npm run --silent snova -- "snova log-prompt"
 ```
 
 ## General recommendation

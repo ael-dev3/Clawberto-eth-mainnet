@@ -7,6 +7,7 @@ import { createEthMainnetLogger } from '../../../src/logging/logger.js';
 import { capturePreflight } from '../../../src/logging/txTracker.js';
 
 async function main() {
+  process.env.ETH_MAINNET_USD_PRICE_OVERRIDE = process.env.ETH_MAINNET_USD_PRICE_OVERRIDE || '3000';
   const repoRoot = mkdtempSync(join(tmpdir(), 'clawberto-eth-logger-'));
   const logger = createEthMainnetLogger({
     repoRoot,
@@ -28,6 +29,10 @@ async function main() {
   });
   const summary = logger.summarizeToday();
   const prompt = readFileSync(logger.paths.cloud.skillUpdatePromptPath, 'utf8');
+  const eventLog = readFileSync(logger.paths.eventFile, 'utf8');
+  if (summary.avgEstimatedTotalFeeUsd === null) throw new Error('logging smoke expected avgEstimatedTotalFeeUsd');
+  if (!eventLog.includes('"estimatedTotalFeeUsd"')) throw new Error('logging smoke expected estimatedTotalFeeUsd in event log');
+  if (!eventLog.includes('"ethPriceUsd":3000')) throw new Error('logging smoke expected ETH_MAINNET_USD_PRICE_OVERRIDE to be reflected in event log');
   console.log(JSON.stringify({
     ok: true,
     repoRoot,

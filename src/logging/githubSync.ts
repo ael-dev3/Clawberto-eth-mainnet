@@ -79,6 +79,8 @@ export function writeCloudArtifacts(paths: CloudSyncPaths, event: LogEvent, summ
     `- tx success rate: ${summary.successRate === null ? 'n/a' : `${(summary.successRate * 100).toFixed(2)}%`}`,
     `- avg latency ms: ${summary.avgLatencyMs === null ? 'n/a' : summary.avgLatencyMs.toFixed(0)}`,
     `- avg effective gas gwei: ${summary.avgEffectiveGasPriceGwei === null ? 'n/a' : summary.avgEffectiveGasPriceGwei.toFixed(3)}`,
+    `- avg estimated fee USD: ${summary.avgEstimatedTotalFeeUsd === null ? 'n/a' : summary.avgEstimatedTotalFeeUsd.toFixed(6)}`,
+    `- avg actual fee USD: ${summary.avgActualFeeUsd === null ? 'n/a' : summary.avgActualFeeUsd.toFixed(6)}`,
     `- last updated: ${summary.lastUpdatedAt || 'n/a'}`,
     '',
   ].join('\n'));

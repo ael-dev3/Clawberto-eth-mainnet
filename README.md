@@ -68,6 +68,9 @@ Optional env vars:
 - `ETH_MAINNET_DEVICE_ID` — override telemetry device id (default: hostname)
 - `ETH_MAINNET_AUTO_GIT_SYNC=1` — opt-in auto commit/push of cloud telemetry artifacts
 - `ETH_MAINNET_GIT_SYNC_INTERVAL_SEC` — debounce interval for auto sync (default `300`)
+- `ETH_MAINNET_USD_QUOTE_TTL_MS` — ETH/USD quote cache TTL for fee logging (default `300000`)
+- `ETH_MAINNET_USD_QUOTE_TIMEOUT_MS` — ETH/USD quote fetch timeout (default `4000`)
+- `ETH_MAINNET_USD_PRICE_OVERRIDE` — deterministic ETH/USD override for tests/simulations
 
 If the local signer bootstrap file exists:
 
@@ -138,6 +141,7 @@ What it records:
 - command start/finish/error with timestamps
 - append-only local JSONL event journals
 - tx-plan preflight gas snapshots when signer env is ready
+- estimated fee telemetry in both ETH and USD (best-effort ETH/USD quote with local cache)
 - daily summaries for latency / fee / success tracking
 - cloud-visible prompt artifacts that can trigger GitHub skill/doc updates
 - future execution-surface hooks for broadcast / receipt / replacement tracking
@@ -150,10 +154,12 @@ Generated `cloud/eth-mainnet` artifacts are gitignored by default so normal comm
 
 Inspection commands:
 ```bash
-npm run eth -- "eth log-status"
-npm run eth -- "eth log-summary"
-npm run eth -- "eth log-prompt"
+npm run --silent eth -- "eth log-status"
+npm run --silent eth -- "eth log-summary"
+npm run --silent eth -- "eth log-prompt"
 ```
+
+For clean machine-readable output, prefer `npm run --silent ...` (or call `node --import tsx ...` directly) so npm does not print its wrapper banner.
 
 ## Important implementation notes
 

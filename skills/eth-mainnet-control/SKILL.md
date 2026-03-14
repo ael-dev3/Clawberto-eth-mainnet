@@ -45,13 +45,13 @@ Supported commands:
 
 ## Logging
 
-This skill now writes quiet telemetry during command usage and tx-plan preflights.
+This skill writes quiet telemetry during command usage and tx-plan preflights, including timestamped fee snapshots in ETH and best-effort USD.
 
 Use:
 ```bash
-npm run eth -- "eth log-status"
-npm run eth -- "eth log-summary"
-npm run eth -- "eth log-prompt"
+npm run --silent eth -- "eth log-status"
+npm run --silent eth -- "eth log-summary"
+npm run --silent eth -- "eth log-prompt"
 ```
 
 ## References

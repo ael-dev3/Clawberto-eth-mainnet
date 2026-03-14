@@ -56,8 +56,15 @@ export function summarizeEvents(events: LogEvent[], date: string, deviceId: stri
     .filter((e) => e.kind === 'tx-preflight')
     .map((e) => toNumberOrNull(e.details.estimatedTotalFeeEth))
     .filter((v): v is number => v !== null);
+  const estimatedFeeUsdValues = events
+    .filter((e) => e.kind === 'tx-preflight')
+    .map((e) => toNumberOrNull(e.details.estimatedTotalFeeUsd))
+    .filter((v): v is number => v !== null);
   const actualFeeValues = txReceipts
     .map((e) => toNumberOrNull(e.details.actualFeeEth))
+    .filter((v): v is number => v !== null);
+  const actualFeeUsdValues = txReceipts
+    .map((e) => toNumberOrNull(e.details.actualFeeUsd))
     .filter((v): v is number => v !== null);
   const lastErrorEvent = [...events].reverse().find((e) => e.status === 'error' || e.kind === 'tx-error' || e.kind === 'logger-error');
   const successDenominator = txReceiptsSuccess + txReceiptsFailed + txErrors;
@@ -79,7 +86,9 @@ export function summarizeEvents(events: LogEvent[], date: string, deviceId: stri
     avgEstimatedPriorityFeeGwei: average(estimatedPriorityValues),
     avgEffectiveGasPriceGwei: average(effectiveGasValues),
     avgEstimatedTotalFeeEth: average(estimatedFeeValues),
+    avgEstimatedTotalFeeUsd: average(estimatedFeeUsdValues),
     avgActualFeeEth: average(actualFeeValues),
+    avgActualFeeUsd: average(actualFeeUsdValues),
     lastError: lastErrorEvent ? String(lastErrorEvent.details.message || lastErrorEvent.details.error || 'unknown error') : null,
     lastUpdatedAt: events.length ? events[events.length - 1].ts : null,
   };
@@ -103,7 +112,9 @@ export function summaryToMarkdown(summary: LogSummary) {
     `- avg estimated priority fee gwei: ${summary.avgEstimatedPriorityFeeGwei === null ? 'n/a' : summary.avgEstimatedPriorityFeeGwei.toFixed(3)}`,
     `- avg effective gas price gwei: ${summary.avgEffectiveGasPriceGwei === null ? 'n/a' : summary.avgEffectiveGasPriceGwei.toFixed(3)}`,
     `- avg estimated total fee ETH: ${summary.avgEstimatedTotalFeeEth === null ? 'n/a' : summary.avgEstimatedTotalFeeEth.toFixed(8)}`,
+    `- avg estimated total fee USD: ${summary.avgEstimatedTotalFeeUsd === null ? 'n/a' : summary.avgEstimatedTotalFeeUsd.toFixed(6)}`,
     `- avg actual fee ETH: ${summary.avgActualFeeEth === null ? 'n/a' : summary.avgActualFeeEth.toFixed(8)}`,
+    `- avg actual fee USD: ${summary.avgActualFeeUsd === null ? 'n/a' : summary.avgActualFeeUsd.toFixed(6)}`,
     `- last error: ${summary.lastError || 'none'}`,
     `- last updated: ${summary.lastUpdatedAt || 'n/a'}`,
     '',
