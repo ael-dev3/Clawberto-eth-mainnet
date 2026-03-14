@@ -4,7 +4,7 @@ import { formatEther, formatGwei } from 'viem';
 import { buildApprovePlan, controlSummary, createEthClient, DEFAULT_SIGNER_ENV, MAINNET_ALIASES, networkSummary, readAllowance, readBalance, readSigner, readTokenMeta, resolveAliasOrAddress } from '../../../src/core/eth.js';
 import { createEthMainnetLogger } from '../../../src/logging/logger.js';
 import { capturePreflight } from '../../../src/logging/txTracker.js';
-import type { TxPlanLike } from '../../../src/logging/types.js';
+import type { LogSummary, TxPlanLike } from '../../../src/logging/types.js';
 
 type ParsedArgs = { positionals: string[]; flags: Map<string, string | true> };
 
@@ -60,6 +60,25 @@ function objectFromFlags(flags: Map<string, string | true>) {
 
 function readPrompt(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf8') : null;
+}
+
+function formatDecimal(value: number | null, decimals: number) {
+  if (value === null || !Number.isFinite(value)) return null;
+  const fixed = value.toFixed(decimals);
+  return fixed.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+}
+
+function presentSummary(summary: LogSummary) {
+  return {
+    ...summary,
+    avgEstimatedMaxFeePerGasGwei: formatDecimal(summary.avgEstimatedMaxFeePerGasGwei, 9),
+    avgEstimatedPriorityFeeGwei: formatDecimal(summary.avgEstimatedPriorityFeeGwei, 9),
+    avgEffectiveGasPriceGwei: formatDecimal(summary.avgEffectiveGasPriceGwei, 9),
+    avgEstimatedTotalFeeEth: formatDecimal(summary.avgEstimatedTotalFeeEth, 18),
+    avgEstimatedTotalFeeUsd: formatDecimal(summary.avgEstimatedTotalFeeUsd, 6),
+    avgActualFeeEth: formatDecimal(summary.avgActualFeeEth, 18),
+    avgActualFeeUsd: formatDecimal(summary.avgActualFeeUsd, 6),
+  };
 }
 
 async function maybeAttachPreflight(client: ReturnType<typeof createEthClient>, logger: ReturnType<typeof createEthMainnetLogger>, payload: unknown, pkEnv: string) {
@@ -144,11 +163,11 @@ async function runCommand(parsed: ParsedArgs, logger: ReturnType<typeof createEt
         latestCloudSummaryJson: logger.paths.cloud.latestSummaryJsonPath,
         skillUpdatePromptPath: logger.paths.cloud.skillUpdatePromptPath,
         pendingSkillUpdate: existsSync(logger.paths.cloud.pendingSkillUpdatePath) ? JSON.parse(readFileSync(logger.paths.cloud.pendingSkillUpdatePath, 'utf8')) : null,
-        summary,
+        summary: presentSummary(summary),
       };
     }
     case 'log-summary':
-      return logger.summarizeToday();
+      return presentSummary(logger.summarizeToday());
     case 'log-prompt':
       return {
         path: logger.paths.cloud.skillUpdatePromptPath,
