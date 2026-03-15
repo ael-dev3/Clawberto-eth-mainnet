@@ -42,14 +42,14 @@ These generated cloud artifacts are gitignored by default so local command usage
 ## What is logged now
 
 ### Automatic on command usage
-`eth_mainnet_chat.ts` and `supernova_mainnet_chat.ts` now log:
+`eth_mainnet_chat.ts` logs:
 - command start
 - command finish
 - command duration
 - quiet error details on failure
 
 ### Automatic on tx-plan outputs
-When a plan command returns `{ to, value, data }` and signer env is ready:
+When `approve-plan`, `transfer-plan`, or `erc20-transfer-plan` returns `{ to, value, data }` and signer env is ready:
 - preflight gas snapshot is captured automatically
 - event kind: `tx-preflight`
 - includes:
@@ -77,13 +77,6 @@ Generic repo logging inspection:
 npm run --silent eth -- "eth log-status"
 npm run --silent eth -- "eth log-summary"
 npm run --silent eth -- "eth log-prompt"
-```
-
-Supernova logging inspection:
-```bash
-npm run --silent snova -- "snova log-status"
-npm run --silent snova -- "snova log-summary"
-npm run --silent snova -- "snova log-prompt"
 ```
 
 ## General recommendation

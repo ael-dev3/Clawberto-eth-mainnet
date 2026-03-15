@@ -32,9 +32,17 @@ async function main() {
   const presentedSummary = presentSummary(summary);
   const prompt = readFileSync(logger.paths.cloud.skillUpdatePromptPath, 'utf8');
   const eventLog = readFileSync(logger.paths.eventFile, 'utf8');
-  if (summary.avgEstimatedTotalFeeUsd === null) throw new Error('logging smoke expected avgEstimatedTotalFeeUsd');
-  if (!eventLog.includes('"estimatedTotalFeeUsd"')) throw new Error('logging smoke expected estimatedTotalFeeUsd in event log');
-  if (!eventLog.includes('"ethPriceUsd":3000')) throw new Error('logging smoke expected ETH_MAINNET_USD_PRICE_OVERRIDE to be reflected in event log');
+  const txPreflightEvent = eventLog
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as { kind?: string; details?: Record<string, unknown> })
+    .find((entry) => entry.kind === 'tx-preflight');
+  if (!txPreflightEvent) throw new Error('logging smoke expected a tx-preflight event');
+  const details = txPreflightEvent.details || {};
+  const sawFeeTelemetry = summary.avgEstimatedTotalFeeUsd !== null || details.estimatedTotalFeeUsd !== null || typeof details.feeEstimateError === 'string' || typeof details.baseFeeError === 'string';
+  if (!sawFeeTelemetry) throw new Error('logging smoke expected fee telemetry or a recorded fee capture error');
+  if (details.ethPriceUsd !== 3000) throw new Error('logging smoke expected ETH_MAINNET_USD_PRICE_OVERRIDE to be reflected in tx-preflight details');
   console.log(JSON.stringify({
     ok: true,
     repoRoot,

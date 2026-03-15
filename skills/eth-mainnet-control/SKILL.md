@@ -1,12 +1,12 @@
 ---
 name: eth-mainnet-control
-description: TypeScript-first Ethereum mainnet control and planning skill. Use when you need deterministic ETH mainnet RPC/signer readiness checks, ERC20 token reads, balance checks, allowance checks, or approval calldata planning before any protocol-specific work.
+description: TypeScript-first Ethereum mainnet control and planning skill. Use when you need deterministic ETH mainnet RPC/signer readiness checks, fee and block summaries, balance and allowance reads, or native/ERC20 transfer planning.
 ---
 
 # ETH Mainnet Control
 
 Use this skill first for Ethereum mainnet readiness.
-This is the generic reusable layer that protocol adapters should build on top of via `src/core/eth.ts`.
+This repo is the standalone ETH mainnet control layer. Protocol-specific planners should live in separate companion repos.
 
 ## Core rules
 
@@ -26,12 +26,16 @@ npm run eth -- "eth control"
 
 Supported commands:
 - `eth network`
+- `eth fee`
+- `eth latest-block`
 - `eth control [--pk-env ETH_MAINNET_EXEC_PRIVATE_KEY]`
 - `eth signer [--pk-env ETH_MAINNET_EXEC_PRIVATE_KEY]`
 - `eth token <token>`
 - `eth balance <owner> <asset|eth>`
 - `eth allowance <token> <owner> <spender|alias>`
 - `eth approve-plan <token> <spender|alias> --amount <decimal>`
+- `eth transfer-plan <recipient|alias> --amount <decimal>`
+- `eth erc20-transfer-plan <token> <recipient|alias> --amount <decimal>`
 - `eth alias <alias|address>`
 - `eth log-status`
 - `eth log-summary`

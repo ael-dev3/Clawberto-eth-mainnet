@@ -1,6 +1,22 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
-import { buildApprovePlan, controlSummary, createEthClient, DEFAULT_SIGNER_ENV, MAINNET_ALIASES, networkSummary, readAllowance, readBalance, readSigner, readTokenMeta, resolveAliasOrAddress } from '../../../src/core/eth.js';
+import {
+  buildApprovePlan,
+  buildErc20TransferPlan,
+  buildEthTransferPlan,
+  controlSummary,
+  createEthClient,
+  DEFAULT_SIGNER_ENV,
+  MAINNET_ALIASES,
+  networkSummary,
+  readAllowance,
+  readBalance,
+  readFeeSummary,
+  readLatestBlockSummary,
+  readSigner,
+  readTokenMeta,
+  resolveAliasOrAddress,
+} from '../../../src/core/eth.js';
 import { createEthMainnetLogger } from '../../../src/logging/logger.js';
 import { presentPreflight, presentSummary } from '../../../src/logging/presentation.js';
 import { capturePreflight } from '../../../src/logging/txTracker.js';
@@ -96,6 +112,10 @@ async function runCommand(parsed: ParsedArgs, logger: ReturnType<typeof createEt
   switch (cmd) {
     case 'network':
       return await networkSummary(client);
+    case 'fee':
+      return await readFeeSummary(client);
+    case 'latest-block':
+      return await readLatestBlockSummary(client);
     case 'control':
       return await controlSummary(client, pkEnv, MAINNET_ALIASES);
     case 'signer':
@@ -110,6 +130,18 @@ async function runCommand(parsed: ParsedArgs, logger: ReturnType<typeof createEt
       const amount = getFlag(parsed, 'amount');
       if (!amount) throw new Error('Missing --amount');
       const plan = await buildApprovePlan(client, requirePositional(parsed, 1, 'token'), requirePositional(parsed, 2, 'spender'), amount, MAINNET_ALIASES);
+      return await maybeAttachPreflight(client, logger, plan, pkEnv);
+    }
+    case 'transfer-plan': {
+      const amount = getFlag(parsed, 'amount');
+      if (!amount) throw new Error('Missing --amount');
+      const plan = buildEthTransferPlan(requirePositional(parsed, 1, 'recipient'), amount, MAINNET_ALIASES);
+      return await maybeAttachPreflight(client, logger, plan, pkEnv);
+    }
+    case 'erc20-transfer-plan': {
+      const amount = getFlag(parsed, 'amount');
+      if (!amount) throw new Error('Missing --amount');
+      const plan = await buildErc20TransferPlan(client, requirePositional(parsed, 1, 'token'), requirePositional(parsed, 2, 'recipient'), amount, MAINNET_ALIASES);
       return await maybeAttachPreflight(client, logger, plan, pkEnv);
     }
     case 'alias':
@@ -138,12 +170,16 @@ async function runCommand(parsed: ParsedArgs, logger: ReturnType<typeof createEt
       return {
         commands: [
           'eth network',
+          'eth fee',
+          'eth latest-block',
           'eth control [--pk-env ETH_MAINNET_EXEC_PRIVATE_KEY]',
           'eth signer [--pk-env ETH_MAINNET_EXEC_PRIVATE_KEY]',
           'eth token <token>',
           'eth balance <owner> <asset|eth>',
           'eth allowance <token> <owner> <spender|alias>',
           'eth approve-plan <token> <spender|alias> --amount <decimal>',
+          'eth transfer-plan <recipient|alias> --amount <decimal>',
+          'eth erc20-transfer-plan <token> <recipient|alias> --amount <decimal>',
           'eth alias <alias|address>',
           'eth log-status',
           'eth log-summary',

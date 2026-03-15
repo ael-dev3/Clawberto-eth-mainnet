@@ -3,9 +3,11 @@ import {
   encodeFunctionData,
   erc20Abi,
   formatEther,
+  formatGwei,
   formatUnits,
   getAddress,
   http,
+  parseEther,
   parseUnits,
   zeroAddress,
   type Address,
@@ -29,6 +31,13 @@ export type TokenMeta = {
   symbol: string;
   name: string;
   decimals: number;
+};
+
+export const NATIVE_ETH_TOKEN: TokenMeta = {
+  address: ZERO,
+  symbol: 'ETH',
+  name: 'Ether',
+  decimals: 18,
 };
 
 export function createEthClient(rpcUrl = DEFAULT_RPC_URL) {
@@ -58,6 +67,72 @@ export async function networkSummary(client: PublicClient) {
     chainId: String(chainId),
     blockNumber: blockNumber.toString(),
     ok: chainId === ETH_MAINNET_CHAIN_ID,
+  };
+}
+
+function formatGweiOrNull(value: bigint | null | undefined) {
+  return value === null || value === undefined ? null : formatGwei(value);
+}
+
+function timestampIso(timestamp: bigint) {
+  return new Date(Number(timestamp) * 1000).toISOString();
+}
+
+export async function readFeeSummary(client: PublicClient) {
+  const [chainId, block, gasPrice] = await Promise.all([
+    client.getChainId(),
+    client.getBlock({ blockTag: 'latest' }),
+    client.getGasPrice(),
+  ]);
+  let estimatedMaxFeePerGas: bigint | null = null;
+  let estimatedMaxPriorityFeePerGas: bigint | null = null;
+  let feeEstimateError: string | null = null;
+  try {
+    const fees = await client.estimateFeesPerGas();
+    estimatedMaxFeePerGas = fees.maxFeePerGas ?? null;
+    estimatedMaxPriorityFeePerGas = fees.maxPriorityFeePerGas ?? null;
+  } catch (error) {
+    feeEstimateError = error instanceof Error ? error.message : String(error);
+  }
+  const baseFeePerGas = block.baseFeePerGas ?? null;
+  const fallbackMaxPriorityFeePerGas = baseFeePerGas !== null && gasPrice > baseFeePerGas ? gasPrice - baseFeePerGas : 1_500_000_000n;
+  const maxPriorityFeePerGas = estimatedMaxPriorityFeePerGas ?? fallbackMaxPriorityFeePerGas;
+  const maxFeePerGas = estimatedMaxFeePerGas ?? (baseFeePerGas !== null ? (baseFeePerGas * 2n) + maxPriorityFeePerGas : gasPrice + maxPriorityFeePerGas);
+  return {
+    chainId: String(chainId),
+    blockNumber: block.number?.toString() ?? null,
+    baseFeePerGasWei: baseFeePerGas?.toString() ?? null,
+    baseFeePerGasGwei: formatGweiOrNull(baseFeePerGas),
+    gasPriceWei: gasPrice.toString(),
+    gasPriceGwei: formatGwei(gasPrice),
+    maxFeePerGasWei: maxFeePerGas.toString(),
+    maxFeePerGasGwei: formatGwei(maxFeePerGas),
+    maxPriorityFeePerGasWei: maxPriorityFeePerGas.toString(),
+    maxPriorityFeePerGasGwei: formatGwei(maxPriorityFeePerGas),
+    suggestionSource: estimatedMaxFeePerGas !== null || estimatedMaxPriorityFeePerGas !== null ? 'estimateFeesPerGas' : 'fallback',
+    feeEstimateError,
+  };
+}
+
+export async function readLatestBlockSummary(client: PublicClient) {
+  const block = await client.getBlock({ blockTag: 'latest' });
+  const gasUtilizationBps = block.gasLimit === 0n ? null : Number((block.gasUsed * 10_000n) / block.gasLimit);
+  return {
+    number: block.number?.toString() ?? null,
+    hash: block.hash,
+    parentHash: block.parentHash,
+    timestamp: block.timestamp.toString(),
+    timestampIso: timestampIso(block.timestamp),
+    miner: block.miner,
+    transactionCount: block.transactions.length,
+    gasUsed: block.gasUsed.toString(),
+    gasLimit: block.gasLimit.toString(),
+    gasUtilizationBps,
+    baseFeePerGasWei: block.baseFeePerGas?.toString() ?? null,
+    baseFeePerGasGwei: formatGweiOrNull(block.baseFeePerGas),
+    size: block.size?.toString() ?? null,
+    blobGasUsed: block.blobGasUsed?.toString() ?? null,
+    excessBlobGas: block.excessBlobGas?.toString() ?? null,
   };
 }
 
@@ -125,10 +200,10 @@ export async function readBalance(client: PublicClient, ownerIn: string, assetIn
     const balance = await client.getBalance({ address: owner });
     return {
       owner,
-      asset: 'ETH',
-      address: ZERO,
-      symbol: 'ETH',
-      decimals: 18,
+      asset: NATIVE_ETH_TOKEN.symbol,
+      address: NATIVE_ETH_TOKEN.address,
+      symbol: NATIVE_ETH_TOKEN.symbol,
+      decimals: NATIVE_ETH_TOKEN.decimals,
       balanceRaw: balance.toString(),
       balance: formatEther(balance),
     };
@@ -187,6 +262,41 @@ export async function buildApprovePlan(client: PublicClient, tokenIn: string, sp
       abi: erc20Abi,
       functionName: 'approve',
       args: [spender, amount],
+    }),
+  };
+}
+
+export function buildEthTransferPlan(recipientIn: string, amountDecimal: string, aliases: Record<string, string> = MAINNET_ALIASES) {
+  const recipient = resolveAliasOrAddress(recipientIn, aliases);
+  const amount = parseEther(amountDecimal);
+  return {
+    action: 'transfer-plan',
+    asset: NATIVE_ETH_TOKEN,
+    recipient,
+    amountRaw: amount.toString(),
+    amount: amountDecimal,
+    to: recipient,
+    value: amount.toString(),
+    data: '0x' as Hex,
+  };
+}
+
+export async function buildErc20TransferPlan(client: PublicClient, tokenIn: string, recipientIn: string, amountDecimal: string, aliases: Record<string, string> = MAINNET_ALIASES) {
+  const [token] = await Promise.all([readTokenMeta(client, tokenIn, aliases)]);
+  const recipient = resolveAliasOrAddress(recipientIn, aliases);
+  const amount = parseUnits(amountDecimal, token.decimals);
+  return {
+    action: 'erc20-transfer-plan',
+    token,
+    recipient,
+    amountRaw: amount.toString(),
+    amount: amountDecimal,
+    to: token.address,
+    value: '0',
+    data: encodeFunctionData({
+      abi: erc20Abi,
+      functionName: 'transfer',
+      args: [recipient, amount],
     }),
   };
 }
