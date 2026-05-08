@@ -115,6 +115,12 @@ This runs:
 - `npm run smoke:eth`
 - `npm run smoke:logging`
 
+For an offline-friendly check that avoids the live ETH smoke probe:
+
+```bash
+npm run check:local
+```
+
 ## Logging
 
 The repo includes quiet local telemetry for command usage and tx-plan preflights.

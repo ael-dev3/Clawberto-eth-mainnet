@@ -11,6 +11,7 @@
     "smoke:eth": "node --import tsx skills/eth-mainnet-control/scripts/eth_mainnet_smoke.ts",
     "smoke:logging": "node --import tsx skills/eth-mainnet-control/scripts/eth_mainnet_logging_smoke.ts",
     "typecheck": "tsc --noEmit",
+    "check:local": "npm run typecheck && npm run smoke:logging",
     "check": "npm run typecheck && npm run smoke:eth && npm run smoke:logging"
   },
   "dependencies": {
